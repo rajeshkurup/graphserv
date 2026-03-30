@@ -1,0 +1,613 @@
+{
+	"info": {
+		"name": "graphserv",
+		"description": "Postman collection for graphserv REST API — topology graph with Neo4j.\n\nRun folders in order:\n1. Ingest Nodes\n2. Ingest Relationships\n3. Anomalies & Tickets\n4. Analysis\n5. CRUD Operations\n6. Cleanup (optional)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8080" }
+	],
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+					}
+				},
+				{
+					"name": "API Root",
+					"request": {
+						"method": "GET",
+						"url": { "raw": "{{baseUrl}}/api/v1", "host": ["{{baseUrl}}"], "path": ["api", "v1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "1 — Ingest Nodes",
+			"item": [
+				{
+					"name": "Application — PaymentsService",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Application\",\n  \"properties\": {\n    \"id\": \"app-123\",\n    \"name\": \"PaymentsService\",\n    \"tier\": \"backend\",\n    \"owner\": \"team-payments\",\n    \"criticality\": \"high\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Application — OrdersService",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Application\",\n  \"properties\": {\n    \"id\": \"app-124\",\n    \"name\": \"OrdersService\",\n    \"tier\": \"backend\",\n    \"owner\": \"team-orders\",\n    \"criticality\": \"medium\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Application — WebFrontend",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Application\",\n  \"properties\": {\n    \"id\": \"app-125\",\n    \"name\": \"WebFrontend\",\n    \"tier\": \"frontend\",\n    \"owner\": \"team-web\",\n    \"criticality\": \"high\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Storage — PaymentsDB",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Storage\",\n  \"properties\": {\n    \"id\": \"db-001\",\n    \"name\": \"PaymentsDB\",\n    \"type\": \"SQL\",\n    \"capacity\": \"500GB\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Storage — OrdersDB",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Storage\",\n  \"properties\": {\n    \"id\": \"db-002\",\n    \"name\": \"OrdersDB\",\n    \"type\": \"NoSQL\",\n    \"capacity\": \"1TB\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Network — VPC-East",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Network\",\n  \"properties\": {\n    \"id\": \"net-01\",\n    \"name\": \"VPC-East\",\n    \"type\": \"VPC\",\n    \"location\": \"us-east-1\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Network — VPC-West",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Network\",\n  \"properties\": {\n    \"id\": \"net-02\",\n    \"name\": \"VPC-West\",\n    \"type\": \"VPC\",\n    \"location\": \"us-west-2\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "IncidentTicket — INC-101",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"IncidentTicket\",\n  \"properties\": {\n    \"id\": \"INC-101\",\n    \"severity\": \"SEV1\",\n    \"status\": \"active\",\n    \"startTime\": \"2026-03-25T10:00:00\",\n    \"endTime\": null\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "ChangeTicket — CHG-201",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"ChangeTicket\",\n  \"properties\": {\n    \"id\": \"CHG-201\",\n    \"description\": \"Deploy PaymentsService v2.3\",\n    \"startTime\": \"2026-03-25T09:00:00\",\n    \"endTime\": \"2026-03-25T09:30:00\",\n    \"status\": \"completed\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "RCATicket — RCA-1",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"RCATicket\",\n  \"properties\": {\n    \"id\": \"RCA-1\",\n    \"description\": \"Investigate latency spike on PaymentsService\",\n    \"status\": \"open\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Action — ACT-1",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Action\",\n  \"properties\": {\n    \"id\": \"ACT-1\",\n    \"description\": \"Restart PaymentsService pods\",\n    \"owner\": \"team-payments\",\n    \"status\": \"pending\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Call — CALL-1 (reified interaction)",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Call\",\n  \"properties\": {\n    \"id\": \"CALL-1\",\n    \"latency\": 250,\n    \"errorRate\": 0.02\n  }\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2 — Ingest Relationships",
+			"item": [
+				{
+					"name": "CALLS — PaymentsService → OrdersService",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"CALLS\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"to\": { \"label\": \"Application\", \"id\": \"app-124\" },\n  \"properties\": { \"startTime\": \"2026-03-25T09:00:00\", \"endTime\": null }\n}"
+						}
+					}
+				},
+				{
+					"name": "CALLS — WebFrontend → PaymentsService",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"CALLS\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-125\" },\n  \"to\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"properties\": { \"startTime\": \"2026-03-25T09:00:00\", \"endTime\": null }\n}"
+						}
+					}
+				},
+				{
+					"name": "USES_STORAGE — PaymentsService → PaymentsDB",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"USES_STORAGE\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"to\": { \"label\": \"Storage\", \"id\": \"db-001\" },\n  \"properties\": { \"startTime\": \"2026-03-01T00:00:00\", \"endTime\": null }\n}"
+						}
+					}
+				},
+				{
+					"name": "USES_STORAGE — OrdersService → OrdersDB",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"USES_STORAGE\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-124\" },\n  \"to\": { \"label\": \"Storage\", \"id\": \"db-002\" },\n  \"properties\": { \"startTime\": \"2026-03-01T00:00:00\", \"endTime\": null }\n}"
+						}
+					}
+				},
+				{
+					"name": "CONNECTS_TO — PaymentsService → VPC-East",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"CONNECTS_TO\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"to\": { \"label\": \"Network\", \"id\": \"net-01\" },\n  \"properties\": {}\n}"
+						}
+					}
+				},
+				{
+					"name": "CONNECTS_TO — OrdersService → VPC-West",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"CONNECTS_TO\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-124\" },\n  \"to\": { \"label\": \"Network\", \"id\": \"net-02\" },\n  \"properties\": {}\n}"
+						}
+					}
+				},
+				{
+					"name": "STORED_ON_NETWORK — PaymentsDB → VPC-East",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"STORED_ON_NETWORK\",\n  \"from\": { \"label\": \"Storage\", \"id\": \"db-001\" },\n  \"to\": { \"label\": \"Network\", \"id\": \"net-01\" },\n  \"properties\": {}\n}"
+						}
+					}
+				},
+				{
+					"name": "STORED_ON_NETWORK — OrdersDB → VPC-West",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"STORED_ON_NETWORK\",\n  \"from\": { \"label\": \"Storage\", \"id\": \"db-002\" },\n  \"to\": { \"label\": \"Network\", \"id\": \"net-02\" },\n  \"properties\": {}\n}"
+						}
+					}
+				},
+				{
+					"name": "IMPACTS — INC-101 → PaymentsService",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"IMPACTS\",\n  \"from\": { \"label\": \"IncidentTicket\", \"id\": \"INC-101\" },\n  \"to\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"properties\": { \"startTime\": \"2026-03-25T10:00:00\", \"endTime\": null, \"role\": \"primary\" }\n}"
+						}
+					}
+				},
+				{
+					"name": "AFFECTS — CHG-201 → PaymentsService",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"AFFECTS\",\n  \"from\": { \"label\": \"ChangeTicket\", \"id\": \"CHG-201\" },\n  \"to\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"properties\": { \"startTime\": \"2026-03-25T09:00:00\", \"endTime\": \"2026-03-25T09:30:00\", \"description\": \"Deployed v2.3\" }\n}"
+						}
+					}
+				},
+				{
+					"name": "ROOT_CAUSE_OF — RCA-1 → INC-101",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"ROOT_CAUSE_OF\",\n  \"from\": { \"label\": \"RCATicket\", \"id\": \"RCA-1\" },\n  \"to\": { \"label\": \"IncidentTicket\", \"id\": \"INC-101\" },\n  \"properties\": {}\n}"
+						}
+					}
+				},
+				{
+					"name": "HAS_ACTION — RCA-1 → ACT-1",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"HAS_ACTION\",\n  \"from\": { \"label\": \"RCATicket\", \"id\": \"RCA-1\" },\n  \"to\": { \"label\": \"Action\", \"id\": \"ACT-1\" },\n  \"properties\": {}\n}"
+						}
+					}
+				},
+				{
+					"name": "TO — CALL-1 → OrdersService",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"TO\",\n  \"from\": { \"label\": \"Call\", \"id\": \"CALL-1\" },\n  \"to\": { \"label\": \"Application\", \"id\": \"app-124\" },\n  \"properties\": { \"latency\": 250, \"errorRate\": 0.02 }\n}"
+						}
+					}
+				},
+				{
+					"name": "DEPENDS_ON_TRANSITIVE — PaymentsService → VPC-East",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"DEPENDS_ON_TRANSITIVE\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"to\": { \"label\": \"Network\", \"id\": \"net-01\" },\n  \"properties\": {}\n}"
+						}
+					}
+				},
+				{
+					"name": "DEPENDS_ON_TRANSITIVE — PaymentsService → PaymentsDB",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"DEPENDS_ON_TRANSITIVE\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"to\": { \"label\": \"Storage\", \"id\": \"db-001\" },\n  \"properties\": {}\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3 — Anomalies",
+			"item": [
+				{
+					"name": "Post Anomaly — latency spike on PaymentsService",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/anomalies", "host": ["{{baseUrl}}"], "path": ["api", "v1", "anomalies"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"anomaly\": {\n    \"id\": \"ANOM-1\",\n    \"type\": \"latency_spike\",\n    \"severity\": \"high\",\n    \"status\": \"active\",\n    \"startTime\": \"2026-03-25T09:55:00\",\n    \"endTime\": null\n  },\n  \"detectedOn\": [\n    { \"label\": \"Application\", \"id\": \"app-123\" }\n  ],\n  \"relationshipProperties\": {\n    \"severity\": \"high\",\n    \"startTime\": \"2026-03-25T09:55:00\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Post Anomaly — disk usage on PaymentsDB",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/anomalies", "host": ["{{baseUrl}}"], "path": ["api", "v1", "anomalies"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"anomaly\": {\n    \"id\": \"ANOM-2\",\n    \"type\": \"disk_usage_high\",\n    \"severity\": \"medium\",\n    \"status\": \"active\",\n    \"startTime\": \"2026-03-25T09:50:00\",\n    \"endTime\": null\n  },\n  \"detectedOn\": [\n    { \"label\": \"Storage\", \"id\": \"db-001\" }\n  ],\n  \"relationshipProperties\": {\n    \"severity\": \"medium\",\n    \"startTime\": \"2026-03-25T09:50:00\"\n  }\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4 — Analysis",
+			"item": [
+				{
+					"name": "Root Cause — from PaymentsService",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/analysis/root-cause", "host": ["{{baseUrl}}"], "path": ["api", "v1", "analysis", "root-cause"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"startLabel\": \"Application\",\n  \"startId\": \"app-123\",\n  \"maxDepth\": 5,\n  \"anomalyStatus\": \"active\",\n  \"limit\": 50\n}"
+						}
+					}
+				},
+				{
+					"name": "Root Cause — from WebFrontend",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/api/v1/analysis/root-cause", "host": ["{{baseUrl}}"], "path": ["api", "v1", "analysis", "root-cause"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"startLabel\": \"Application\",\n  \"startId\": \"app-125\",\n  \"maxDepth\": 5,\n  \"anomalyStatus\": \"active\",\n  \"limit\": 50\n}"
+						}
+					}
+				},
+				{
+					"name": "Impact — blast radius of PaymentsService",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analysis/impact?label=Application&id=app-123&useTransitive=false",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analysis", "impact"],
+							"query": [
+								{ "key": "label", "value": "Application" },
+								{ "key": "id", "value": "app-123" },
+								{ "key": "useTransitive", "value": "false" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Impact — blast radius with transitive edges",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analysis/impact?label=Application&id=app-123&useTransitive=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analysis", "impact"],
+							"query": [
+								{ "key": "label", "value": "Application" },
+								{ "key": "id", "value": "app-123" },
+								{ "key": "useTransitive", "value": "true" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Impact — blast radius of VPC-East",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analysis/impact?label=Network&id=net-01&useTransitive=false",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analysis", "impact"],
+							"query": [
+								{ "key": "label", "value": "Network" },
+								{ "key": "id", "value": "net-01" },
+								{ "key": "useTransitive", "value": "false" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5 — CRUD Operations",
+			"item": [
+				{
+					"name": "List Applications",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/nodes/Application?limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "nodes", "Application"],
+							"query": [{ "key": "limit", "value": "10" }]
+						}
+					}
+				},
+				{
+					"name": "List Storage",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/nodes/Storage?limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "nodes", "Storage"],
+							"query": [{ "key": "limit", "value": "10" }]
+						}
+					}
+				},
+				{
+					"name": "List Network",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/nodes/Network?limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "nodes", "Network"],
+							"query": [{ "key": "limit", "value": "10" }]
+						}
+					}
+				},
+				{
+					"name": "List Anomaly nodes",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/nodes/Anomaly?limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "nodes", "Anomaly"],
+							"query": [{ "key": "limit", "value": "10" }]
+						}
+					}
+				},
+				{
+					"name": "Get Node — PaymentsService",
+					"request": {
+						"method": "GET",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes/Application/app-123", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes", "Application", "app-123"] }
+					}
+				},
+				{
+					"name": "Patch Node — update PaymentsService criticality",
+					"request": {
+						"method": "PATCH",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes/Application/app-123", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes", "Application", "app-123"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"criticality\": \"critical\"\n}"
+						}
+					}
+				},
+				{
+					"name": "List Relationships — CALLS from PaymentsService",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/relationships?fromLabel=Application&fromId=app-123&type=CALLS&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "relationships"],
+							"query": [
+								{ "key": "fromLabel", "value": "Application" },
+								{ "key": "fromId", "value": "app-123" },
+								{ "key": "type", "value": "CALLS" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "List Relationships — USES_STORAGE from PaymentsService",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/relationships?fromLabel=Application&fromId=app-123&type=USES_STORAGE&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "relationships"],
+							"query": [
+								{ "key": "fromLabel", "value": "Application" },
+								{ "key": "fromId", "value": "app-123" },
+								{ "key": "type", "value": "USES_STORAGE" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Patch Relationship — update CALLS properties",
+					"request": {
+						"method": "PATCH",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"CALLS\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"to\": { \"label\": \"Application\", \"id\": \"app-124\" },\n  \"properties\": { \"endTime\": \"2026-03-25T12:00:00\" }\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6 — Cleanup (optional)",
+			"item": [
+				{
+					"name": "Delete Relationship — CALLS PaymentsService → OrdersService",
+					"request": {
+						"method": "DELETE",
+						"url": { "raw": "{{baseUrl}}/api/v1/relationships", "host": ["{{baseUrl}}"], "path": ["api", "v1", "relationships"] },
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"CALLS\",\n  \"from\": { \"label\": \"Application\", \"id\": \"app-123\" },\n  \"to\": { \"label\": \"Application\", \"id\": \"app-124\" }\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Node — OrdersService",
+					"request": {
+						"method": "DELETE",
+						"url": { "raw": "{{baseUrl}}/api/v1/nodes/Application/app-124", "host": ["{{baseUrl}}"], "path": ["api", "v1", "nodes", "Application", "app-124"] }
+					}
+				}
+			]
+		}
+	]
+}

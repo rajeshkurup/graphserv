@@ -53,13 +53,13 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.Handle("GET /api/v1/analysis/impact", http.HandlerFunc(s.impact))
 }
 
-/**
- * @brief GET /api/v1 — returns service name and a list of available endpoint paths.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r incoming HTTP request.
- * @return None; writes JSON 200 to w.
- */
+// root godoc
+// @Summary API root
+// @Description Returns service name and list of available endpoints
+// @Tags Health
+// @Produce json
+// @Success 200 {object} map[string]any
+// @Router /api/v1 [get]
 func (s *Server) root(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"service": "graphserv",
@@ -82,17 +82,21 @@ func (s *Server) root(w http.ResponseWriter, r *http.Request) {
 
 // ingestNodeReq is the JSON body for POST /api/v1/nodes.
 type ingestNodeReq struct {
-	Label      string         `json:"label"`
+	Label      string         `json:"label" example:"Application"`
 	Properties map[string]any `json:"properties"`
 }
 
-/**
- * @brief POST /api/v1/nodes — ingests (merge) a node with label and properties (must include id).
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with JSON body (ingestNodeReq).
- * @return None; responds 201 with node map or an error JSON status.
- */
+// ingestNode godoc
+// @Summary Ingest (merge) a node
+// @Description Creates or merges a node with the given label and properties. Properties must include an "id" field.
+// @Tags Nodes
+// @Accept json
+// @Produce json
+// @Param body body ingestNodeReq true "Node label and properties"
+// @Success 201 {object} map[string]any
+// @Failure 400 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/nodes [post]
 func (s *Server) ingestNode(w http.ResponseWriter, r *http.Request) {
 	var req ingestNodeReq
 	if err := readJSON(r, &req); err != nil {
@@ -107,13 +111,16 @@ func (s *Server) ingestNode(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, out)
 }
 
-/**
- * @brief GET /api/v1/nodes/{label} — lists nodes for a label with optional ?limit=.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request; path label from route; query limit.
- * @return None; writes JSON { "nodes": [...] } or error.
- */
+// listNodes godoc
+// @Summary List nodes by label
+// @Description Returns all nodes matching the given label with optional limit
+// @Tags Nodes
+// @Produce json
+// @Param label path string true "Node label (e.g. Application, Storage, Network, IncidentTicket, ChangeTicket, RCATicket, Action, Anomaly, Call)"
+// @Param limit query int false "Max results" default(100)
+// @Success 200 {object} map[string]any
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/nodes/{label} [get]
 func (s *Server) listNodes(w http.ResponseWriter, r *http.Request) {
 	label := r.PathValue("label")
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -125,13 +132,17 @@ func (s *Server) listNodes(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"nodes": items})
 }
 
-/**
- * @brief GET /api/v1/nodes/{label}/{id} — returns a single node by business id.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with path label and id.
- * @return None; writes JSON node or 404/error.
- */
+// getNode godoc
+// @Summary Get a single node
+// @Description Returns a node by its label and business id
+// @Tags Nodes
+// @Produce json
+// @Param label path string true "Node label"
+// @Param id path string true "Node business id"
+// @Success 200 {object} map[string]any
+// @Failure 404 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/nodes/{label}/{id} [get]
 func (s *Server) getNode(w http.ResponseWriter, r *http.Request) {
 	label := r.PathValue("label")
 	id := r.PathValue("id")
@@ -143,13 +154,20 @@ func (s *Server) getNode(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, n)
 }
 
-/**
- * @brief PATCH /api/v1/nodes/{label}/{id} — merges JSON properties onto the node (id cannot be changed).
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with path label/id and JSON object body.
- * @return None; writes updated node JSON or error.
- */
+// patchNode godoc
+// @Summary Update node properties
+// @Description Merges the given JSON properties onto the node (id cannot be changed)
+// @Tags Nodes
+// @Accept json
+// @Produce json
+// @Param label path string true "Node label"
+// @Param id path string true "Node business id"
+// @Param body body map[string]any true "Properties to merge"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} errorResponse
+// @Failure 404 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/nodes/{label}/{id} [patch]
 func (s *Server) patchNode(w http.ResponseWriter, r *http.Request) {
 	label := r.PathValue("label")
 	id := r.PathValue("id")
@@ -166,13 +184,16 @@ func (s *Server) patchNode(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, n)
 }
 
-/**
- * @brief DELETE /api/v1/nodes/{label}/{id} — detach-deletes the node.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with path label and id.
- * @return None; 204 on success or error JSON.
- */
+// deleteNode godoc
+// @Summary Delete a node
+// @Description Detach-deletes the node and all its relationships
+// @Tags Nodes
+// @Param label path string true "Node label"
+// @Param id path string true "Node business id"
+// @Success 204 "Node deleted"
+// @Failure 404 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/nodes/{label}/{id} [delete]
 func (s *Server) deleteNode(w http.ResponseWriter, r *http.Request) {
 	label := r.PathValue("label")
 	id := r.PathValue("id")
@@ -185,19 +206,23 @@ func (s *Server) deleteNode(w http.ResponseWriter, r *http.Request) {
 
 // ingestRelReq is the JSON body for POST /api/v1/relationships.
 type ingestRelReq struct {
-	Type       string              `json:"type"`
+	Type       string              `json:"type" example:"CALLS"`
 	From       graphstore.Endpoint `json:"from"`
 	To         graphstore.Endpoint `json:"to"`
 	Properties map[string]any      `json:"properties"`
 }
 
-/**
- * @brief POST /api/v1/relationships — merges a typed relationship between two endpoints.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with ingestRelReq JSON.
- * @return None; 201 with relationship map or error.
- */
+// ingestRel godoc
+// @Summary Ingest (merge) a relationship
+// @Description Creates or merges a typed relationship between two endpoint nodes
+// @Tags Relationships
+// @Accept json
+// @Produce json
+// @Param body body ingestRelReq true "Relationship type, endpoints, and properties"
+// @Success 201 {object} map[string]any
+// @Failure 400 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/relationships [post]
 func (s *Server) ingestRel(w http.ResponseWriter, r *http.Request) {
 	var req ingestRelReq
 	if err := readJSON(r, &req); err != nil {
@@ -212,13 +237,21 @@ func (s *Server) ingestRel(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, out)
 }
 
-/**
- * @brief GET /api/v1/relationships — lists relationships from a node; requires fromLabel, fromId, type; optional toLabel/toId, limit.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with query parameters.
- * @return None; JSON { "relationships": [...] } or 400/error.
- */
+// listRels godoc
+// @Summary List relationships from a node
+// @Description Returns relationships of a given type from a source node, with optional target filter
+// @Tags Relationships
+// @Produce json
+// @Param fromLabel query string true "Source node label"
+// @Param fromId query string true "Source node id"
+// @Param type query string true "Relationship type (e.g. CALLS, USES_STORAGE, CONNECTS_TO, STORED_ON_NETWORK, IMPACTS, AFFECTS, ROOT_CAUSE_OF, HAS_ACTION, TO, DEPENDS_ON_TRANSITIVE)"
+// @Param toLabel query string false "Target node label"
+// @Param toId query string false "Target node id"
+// @Param limit query int false "Max results" default(100)
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/relationships [get]
 func (s *Server) listRels(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	from := graphstore.Endpoint{Label: q.Get("fromLabel"), ID: q.Get("fromId")}
@@ -242,19 +275,24 @@ func (s *Server) listRels(w http.ResponseWriter, r *http.Request) {
 
 // relPatchReq identifies a relationship and optional property patch for PATCH/DELETE.
 type relPatchReq struct {
-	Type  string              `json:"type"`
+	Type  string              `json:"type" example:"CALLS"`
 	From  graphstore.Endpoint `json:"from"`
 	To    graphstore.Endpoint `json:"to"`
 	Patch map[string]any      `json:"properties"`
 }
 
-/**
- * @brief PATCH /api/v1/relationships — merges properties onto an existing relationship.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with relPatchReq JSON.
- * @return None; updated relationship JSON or error.
- */
+// patchRel godoc
+// @Summary Update relationship properties
+// @Description Merges properties onto an existing relationship identified by type and endpoints
+// @Tags Relationships
+// @Accept json
+// @Produce json
+// @Param body body relPatchReq true "Relationship identifier and properties to merge"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} errorResponse
+// @Failure 404 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/relationships [patch]
 func (s *Server) patchRel(w http.ResponseWriter, r *http.Request) {
 	var req relPatchReq
 	if err := readJSON(r, &req); err != nil {
@@ -269,13 +307,24 @@ func (s *Server) patchRel(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-/**
- * @brief DELETE /api/v1/relationships — deletes a relationship identified by type and endpoints.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with relPatchReq JSON (type, from, to).
- * @return None; 204 or error.
- */
+// deleteRelReq identifies a relationship for deletion.
+type deleteRelReq struct {
+	Type string              `json:"type" example:"CALLS"`
+	From graphstore.Endpoint `json:"from"`
+	To   graphstore.Endpoint `json:"to"`
+}
+
+// deleteRel godoc
+// @Summary Delete a relationship
+// @Description Deletes a relationship identified by type and endpoints
+// @Tags Relationships
+// @Accept json
+// @Param body body deleteRelReq true "Relationship identifier"
+// @Success 204 "Relationship deleted"
+// @Failure 400 {object} errorResponse
+// @Failure 404 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/relationships [delete]
 func (s *Server) deleteRel(w http.ResponseWriter, r *http.Request) {
 	var req relPatchReq
 	if err := readJSON(r, &req); err != nil {
@@ -296,13 +345,17 @@ type anomalyReq struct {
 	RelationshipProperties map[string]any        `json:"relationshipProperties"`
 }
 
-/**
- * @brief POST /api/v1/anomalies — upserts an anomaly and DETECTED_ON edges to given topology nodes.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with anomalyReq JSON.
- * @return None; anomaly node JSON or error.
- */
+// postAnomaly godoc
+// @Summary Upsert anomaly with DETECTED_ON edges
+// @Description Creates or updates an anomaly node and links it to topology nodes via DETECTED_ON relationships
+// @Tags Anomalies
+// @Accept json
+// @Produce json
+// @Param body body anomalyReq true "Anomaly properties, target nodes, and relationship properties"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/anomalies [post]
 func (s *Server) postAnomaly(w http.ResponseWriter, r *http.Request) {
 	var req anomalyReq
 	if err := readJSON(r, &req); err != nil {
@@ -319,20 +372,24 @@ func (s *Server) postAnomaly(w http.ResponseWriter, r *http.Request) {
 
 // rootCauseReq is the JSON body for POST /api/v1/analysis/root-cause.
 type rootCauseReq struct {
-	StartLabel    string `json:"startLabel"`
-	StartID       string `json:"startId"`
-	MaxDepth      int    `json:"maxDepth"`
-	AnomalyStatus string `json:"anomalyStatus"`
-	Limit         int    `json:"limit"`
+	StartLabel    string `json:"startLabel" example:"Application"`
+	StartID       string `json:"startId" example:"app-123"`
+	MaxDepth      int    `json:"maxDepth" example:"5"`
+	AnomalyStatus string `json:"anomalyStatus" example:"active"`
+	Limit         int    `json:"limit" example:"50"`
 }
 
-/**
- * @brief POST /api/v1/analysis/root-cause — runs downstream topology traversal to nearest active anomalies.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with rootCauseReq JSON (startLabel, startId required).
- * @return None; RootCauseResult JSON or error.
- */
+// rootCause godoc
+// @Summary Root cause analysis
+// @Description Traverses downstream topology edges from a start node to find active anomalies
+// @Tags Analysis
+// @Accept json
+// @Produce json
+// @Param body body rootCauseReq true "Start node and traversal parameters"
+// @Success 200 {object} graphstore.RootCauseResult
+// @Failure 400 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/analysis/root-cause [post]
 func (s *Server) rootCause(w http.ResponseWriter, r *http.Request) {
 	var req rootCauseReq
 	if err := readJSON(r, &req); err != nil {
@@ -351,13 +408,18 @@ func (s *Server) rootCause(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-/**
- * @brief GET /api/v1/analysis/impact — reverse-dependency (blast radius) metrics for a node.
- * @param s the API server (receiver).
- * @param w HTTP response writer.
- * @param r request with query label, id, optional useTransitive=true|1.
- * @return None; ImpactMetrics JSON or error.
- */
+// impact godoc
+// @Summary Blast radius / impact analysis
+// @Description Returns reverse-dependency (blast radius) metrics for a node — how many other nodes depend on it
+// @Tags Analysis
+// @Produce json
+// @Param label query string true "Node label"
+// @Param id query string true "Node business id"
+// @Param useTransitive query string false "Use precomputed DEPENDS_ON_TRANSITIVE edges (true/false)" default(false)
+// @Success 200 {object} graphstore.ImpactMetrics
+// @Failure 400 {object} errorResponse
+// @Failure 502 {object} errorResponse
+// @Router /api/v1/analysis/impact [get]
 func (s *Server) impact(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	label, id := q.Get("label"), q.Get("id")
@@ -374,12 +436,11 @@ func (s *Server) impact(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-/**
- * @brief Decodes a JSON request body (capped by maxBody) into v and closes the body.
- * @param r HTTP request whose Body is read.
- * @param v destination for json.Unmarshal-compatible decode (pointer).
- * @return nil on success, or a decode/io error.
- */
+// errorResponse is the standard error JSON shape for Swagger docs.
+type errorResponse struct {
+	Error string `json:"error" example:"bad request"`
+}
+
 func readJSON(r *http.Request, v any) error {
 	defer r.Body.Close()
 	body := io.LimitReader(r.Body, maxBody)
@@ -388,36 +449,16 @@ func readJSON(r *http.Request, v any) error {
 	return dec.Decode(v)
 }
 
-/**
- * @brief Writes JSON response with Content-Type application/json.
- * @param w HTTP response writer.
- * @param status HTTP status code.
- * @param v value to JSON-encode.
- * @return None.
- */
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-/**
- * @brief Writes a JSON object {"error": msg} with the given HTTP status.
- * @param w HTTP response writer.
- * @param status HTTP status code (e.g. 400).
- * @param msg error message string for clients.
- * @return None.
- */
 func writeErr(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]string{"error": msg})
 }
 
-/**
- * @brief Maps store/driver errors to appropriate HTTP status and JSON error body.
- * @param w HTTP response writer.
- * @param err error from graphstore or Neo4j (nil returns immediately with no write).
- * @return None.
- */
 func writeStoreErr(w http.ResponseWriter, err error) {
 	if err == nil {
 		return

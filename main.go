@@ -18,7 +18,19 @@ import (
 	"graphserv/internal/api"
 	"graphserv/internal/config"
 	"graphserv/internal/graphstore"
+
+	_ "graphserv/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
+
+// @title graphserv API
+// @version 1.0
+// @description REST API for Neo4j topology graph — nodes, relationships, anomalies, root cause analysis, and blast radius impact.
+// @contact.name Rajesh Kurup
+// @contact.email rajeshkurup@live.com
+// @host localhost:8080
+// @BasePath /
 
 /**
  * @brief Loads environment configuration, opens Neo4j, registers HTTP routes, serves until SIGINT/SIGTERM, then shuts down the server.
@@ -42,6 +54,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler)
 	(&api.Server{Store: store}).Register(mux)
+	mux.Handle("GET /swagger/", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	srv := &http.Server{
 		Addr:         cfg.HTTPAddr,
@@ -53,6 +68,7 @@ func main() {
 
 	go func() {
 		log.Printf("graphserv listening on %s (Neo4j %s)", cfg.HTTPAddr, cfg.Neo4jURI)
+		log.Printf("Swagger UI at http://localhost%s/swagger/index.html", cfg.HTTPAddr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
@@ -81,12 +97,13 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-/**
- * @brief Liveness-style endpoint returning a minimal JSON OK payload.
- * @param w HTTP response writer.
- * @param r incoming HTTP request (unused for routing beyond method/path).
- * @return None; writes status 200 and JSON body to w.
- */
+// healthHandler godoc
+// @Summary Health check
+// @Description Returns service health status
+// @Tags Health
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Router /health [get]
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }

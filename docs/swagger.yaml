@@ -1,0 +1,579 @@
+basePath: /
+definitions:
+  api.anomalyReq:
+    properties:
+      anomaly:
+        additionalProperties: {}
+        type: object
+      detectedOn:
+        items:
+          $ref: '#/definitions/graphstore.Endpoint'
+        type: array
+      relationshipProperties:
+        additionalProperties: {}
+        type: object
+    type: object
+  api.deleteRelReq:
+    properties:
+      from:
+        $ref: '#/definitions/graphstore.Endpoint'
+      to:
+        $ref: '#/definitions/graphstore.Endpoint'
+      type:
+        example: CALLS
+        type: string
+    type: object
+  api.errorResponse:
+    properties:
+      error:
+        example: bad request
+        type: string
+    type: object
+  api.ingestNodeReq:
+    properties:
+      label:
+        example: Application
+        type: string
+      properties:
+        additionalProperties: {}
+        type: object
+    type: object
+  api.ingestRelReq:
+    properties:
+      from:
+        $ref: '#/definitions/graphstore.Endpoint'
+      properties:
+        additionalProperties: {}
+        type: object
+      to:
+        $ref: '#/definitions/graphstore.Endpoint'
+      type:
+        example: CALLS
+        type: string
+    type: object
+  api.relPatchReq:
+    properties:
+      from:
+        $ref: '#/definitions/graphstore.Endpoint'
+      properties:
+        additionalProperties: {}
+        type: object
+      to:
+        $ref: '#/definitions/graphstore.Endpoint'
+      type:
+        example: CALLS
+        type: string
+    type: object
+  api.rootCauseReq:
+    properties:
+      anomalyStatus:
+        example: active
+        type: string
+      limit:
+        example: 50
+        type: integer
+      maxDepth:
+        example: 5
+        type: integer
+      startId:
+        example: app-123
+        type: string
+      startLabel:
+        example: Application
+        type: string
+    type: object
+  graphstore.Endpoint:
+    properties:
+      id:
+        type: string
+      label:
+        type: string
+    type: object
+  graphstore.ImpactMetrics:
+    properties:
+      byLabel:
+        additionalProperties:
+          type: integer
+        type: object
+      byRelationshipType:
+        additionalProperties:
+          type: integer
+        type: object
+      dependentCount:
+        type: integer
+      dependents:
+        items:
+          additionalProperties: {}
+          type: object
+        type: array
+      start:
+        additionalProperties: {}
+        type: object
+      usedTransitive:
+        type: boolean
+    type: object
+  graphstore.RootCauseResult:
+    properties:
+      candidates:
+        type: integer
+      origins:
+        items:
+          additionalProperties: {}
+          type: object
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: rajeshkurup@live.com
+    name: Rajesh Kurup
+  description: REST API for Neo4j topology graph — nodes, relationships, anomalies,
+    root cause analysis, and blast radius impact.
+  title: graphserv API
+  version: "1.0"
+paths:
+  /api/v1:
+    get:
+      description: Returns service name and list of available endpoints
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: API root
+      tags:
+      - Health
+  /api/v1/analysis/impact:
+    get:
+      description: Returns reverse-dependency (blast radius) metrics for a node —
+        how many other nodes depend on it
+      parameters:
+      - description: Node label
+        in: query
+        name: label
+        required: true
+        type: string
+      - description: Node business id
+        in: query
+        name: id
+        required: true
+        type: string
+      - default: "false"
+        description: Use precomputed DEPENDS_ON_TRANSITIVE edges (true/false)
+        in: query
+        name: useTransitive
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/graphstore.ImpactMetrics'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Blast radius / impact analysis
+      tags:
+      - Analysis
+  /api/v1/analysis/root-cause:
+    post:
+      consumes:
+      - application/json
+      description: Traverses downstream topology edges from a start node to find active
+        anomalies
+      parameters:
+      - description: Start node and traversal parameters
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.rootCauseReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/graphstore.RootCauseResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Root cause analysis
+      tags:
+      - Analysis
+  /api/v1/anomalies:
+    post:
+      consumes:
+      - application/json
+      description: Creates or updates an anomaly node and links it to topology nodes
+        via DETECTED_ON relationships
+      parameters:
+      - description: Anomaly properties, target nodes, and relationship properties
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.anomalyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Upsert anomaly with DETECTED_ON edges
+      tags:
+      - Anomalies
+  /api/v1/nodes:
+    post:
+      consumes:
+      - application/json
+      description: Creates or merges a node with the given label and properties. Properties
+        must include an "id" field.
+      parameters:
+      - description: Node label and properties
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.ingestNodeReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Ingest (merge) a node
+      tags:
+      - Nodes
+  /api/v1/nodes/{label}:
+    get:
+      description: Returns all nodes matching the given label with optional limit
+      parameters:
+      - description: Node label (e.g. Application, Storage, Network, IncidentTicket,
+          ChangeTicket, RCATicket, Action, Anomaly, Call)
+        in: path
+        name: label
+        required: true
+        type: string
+      - default: 100
+        description: Max results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: List nodes by label
+      tags:
+      - Nodes
+  /api/v1/nodes/{label}/{id}:
+    delete:
+      description: Detach-deletes the node and all its relationships
+      parameters:
+      - description: Node label
+        in: path
+        name: label
+        required: true
+        type: string
+      - description: Node business id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Node deleted
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Delete a node
+      tags:
+      - Nodes
+    get:
+      description: Returns a node by its label and business id
+      parameters:
+      - description: Node label
+        in: path
+        name: label
+        required: true
+        type: string
+      - description: Node business id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Get a single node
+      tags:
+      - Nodes
+    patch:
+      consumes:
+      - application/json
+      description: Merges the given JSON properties onto the node (id cannot be changed)
+      parameters:
+      - description: Node label
+        in: path
+        name: label
+        required: true
+        type: string
+      - description: Node business id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Properties to merge
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Update node properties
+      tags:
+      - Nodes
+  /api/v1/relationships:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a relationship identified by type and endpoints
+      parameters:
+      - description: Relationship identifier
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.deleteRelReq'
+      responses:
+        "204":
+          description: Relationship deleted
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Delete a relationship
+      tags:
+      - Relationships
+    get:
+      description: Returns relationships of a given type from a source node, with
+        optional target filter
+      parameters:
+      - description: Source node label
+        in: query
+        name: fromLabel
+        required: true
+        type: string
+      - description: Source node id
+        in: query
+        name: fromId
+        required: true
+        type: string
+      - description: Relationship type (e.g. CALLS, USES_STORAGE, CONNECTS_TO, STORED_ON_NETWORK,
+          IMPACTS, AFFECTS, ROOT_CAUSE_OF, HAS_ACTION, TO, DEPENDS_ON_TRANSITIVE)
+        in: query
+        name: type
+        required: true
+        type: string
+      - description: Target node label
+        in: query
+        name: toLabel
+        type: string
+      - description: Target node id
+        in: query
+        name: toId
+        type: string
+      - default: 100
+        description: Max results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: List relationships from a node
+      tags:
+      - Relationships
+    patch:
+      consumes:
+      - application/json
+      description: Merges properties onto an existing relationship identified by type
+        and endpoints
+      parameters:
+      - description: Relationship identifier and properties to merge
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.relPatchReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Update relationship properties
+      tags:
+      - Relationships
+    post:
+      consumes:
+      - application/json
+      description: Creates or merges a typed relationship between two endpoint nodes
+      parameters:
+      - description: Relationship type, endpoints, and properties
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.ingestRelReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Ingest (merge) a relationship
+      tags:
+      - Relationships
+  /health:
+    get:
+      description: Returns service health status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - Health
+swagger: "2.0"
